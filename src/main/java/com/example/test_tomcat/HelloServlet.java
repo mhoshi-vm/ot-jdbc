@@ -1,6 +1,7 @@
 package com.example.test_tomcat;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.extension.annotations.WithSpan;
 
@@ -44,7 +45,7 @@ public class HelloServlet extends HttpServlet {
     }
 
 
-    @WithSpan
+    @WithSpan(kind = SpanKind.CLIENT)
     public String getAuthors(DBConnection dbConnection) throws SQLException {
         Connection connection = null;
         Span span = Span.current();
