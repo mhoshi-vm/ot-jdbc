@@ -23,7 +23,11 @@ public class HelloServlet extends HttpServlet {
 
 
         DBConnection dbConnection = new DBConnection();
-        message = getAuthors(dbConnection);
+        try {
+            message = getAuthors(dbConnection);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
         // Hello
         PrintWriter out = response.getWriter();
         out.println("<html><body>");
@@ -35,7 +39,7 @@ public class HelloServlet extends HttpServlet {
     }
 
 
-    public String getAuthors(DBConnection dbConnection){
+    public String getAuthors(DBConnection dbConnection) throws SQLException {
         Connection connection = null;
         String response = "";
         try {
@@ -58,6 +62,8 @@ public class HelloServlet extends HttpServlet {
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+        } finally {
+            connection.close();
         }
         return response;
     }
