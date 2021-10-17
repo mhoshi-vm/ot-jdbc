@@ -1,5 +1,9 @@
 package com.example.test_tomcat;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.extension.annotations.WithSpan;
+
 import java.io.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,6 +17,7 @@ import javax.servlet.annotation.*;
 @WebServlet(name = "helloServlet", value = "/hello-servlet")
 public class HelloServlet extends HttpServlet {
     private String message;
+
 
     public void init() {
         message = "";
@@ -39,8 +44,16 @@ public class HelloServlet extends HttpServlet {
     }
 
 
+    @WithSpan
     public String getAuthors(DBConnection dbConnection) throws SQLException {
         Connection connection = null;
+        Span span = Span.current();
+
+        span.setAttribute("span.kind", "client");
+        span.setAttribute("component", "java-jdbc");
+        span.setAttribute("db.type", "MySQL");
+        span.setAttribute("db.instance", "Authors");
+
         String response = "";
         try {
             connection = dbConnection.getConnection();
