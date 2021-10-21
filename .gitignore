@@ -1,0 +1,4 @@
+target/*
+mysql-connector-java-8.0.26.jar
+opentelemetry-javaagent-all.jar
+otelcontribcol_linux_amd64

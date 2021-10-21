@@ -1,0 +1,50 @@
+receivers:
+   otlp:
+      protocols:
+          grpc:
+              endpoint: "0.0.0.0:4317"
+exporters:
+    tanzuobservability:
+      traces:
+        endpoint: "http://wfproxy:30001" 
+  # Proxy hostname and customTracing ListenerPort
+processors:
+  resource/deletes:
+    attributes:
+      - { key: host.arch, action: delete }
+      - { key: host.name, action: delete }
+      - { key: os.description, action: delete }
+      - { key: process.command_line, action: delete }
+      - { key: process.executable.path, action: delete }
+      - { key: process.pid, action: delete }
+      - { key: process.runtime.description, action: delete }
+      - { key: process.runtime.name, action: delete }
+      - { key: process.runtime.version, action: delete }
+      - { key: telemetry.auto.version, action: delete }
+      - { key: telemetry.sdk.language, action: delete }
+      - { key: telemetry.sdk.name, action: delete }
+      - { key: telemetry.sdk.version, action: delete }
+  attributes/dbmodify:
+    include:
+      match_type: regexp
+      attributes:
+        - {key: db.operation, value: "^.*$"}
+    actions:
+      - key: "db.type"
+        from_attribute: "db.system"
+        action: insert
+      - key: "db.instance"
+        from_attribute: "db.name"
+        action: insert
+      - key: "component"
+        value: "java-jdbc"
+        action: insert
+  batch:
+    timeout: 10s
+      
+service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        exporters: [tanzuobservability]
+        processors: [batch, resource/deletes, attributes/dbmodify]

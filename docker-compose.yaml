@@ -1,0 +1,41 @@
+version: '3.1'
+services:
+  tomcat:
+    restart: always
+    image: gcr.io/sys-2b0109it/demo/bitnami/tomcat:9.0
+    container_name: tomcat
+    ports:
+      - 8080:8080
+    environment:
+      CATALINA_OPTS: '${CATALINA_OPTS} -javaagent:/tmp/opentelemetry-javaagent-all.jar -Dotel.resource.attributes=application=test -Dotel.service.name=testtest -Dotel.metrics.exporter=none -Dotel.propagators=b3 -Dotel.instrumentation.jdbc.enabled=true -Dotel.instrumentation.jdbc-datasource.enabled=true -Dotel.javaagent.debug=true -Dotel.exporter.otlp.endpoint=http://otel:4317'
+      ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./target/test-tomcat-1.0-SNAPSHOT.war:/opt/bitnami/tomcat/webapps/test-tomcat-1.0-SNAPSHOT.war
+      - ./docker-compose-context.xml:/opt/bitnami/tomcat/conf/context.xml
+      - ./opentelemetry-javaagent-all.jar:/tmp/opentelemetry-javaagent-all.jar
+      - ./mysql-connector-java-8.0.26.jar:/opt/bitnami/tomcat/lib/mysql-connector-java-8.0.26.jar
+  mysql:
+    restart: always
+    image: gcr.io/sys-2b0109it/demo/bitnami/mysql:latest 
+    container_name: mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+        - ./docker-compose.sql:/docker-entrypoint-initdb.d/docker-compose.sql
+  otel:
+    build:
+      context: ./
+    container_name: otel
+    command: ["--config=/etc/otel-agent-config.yaml"]
+    volumes:
+      - ./docker-compose-otel.yaml:/etc/otel-agent-config.yaml
+  wfproxy:
+    restart: always
+    image: wavefronthq/proxy
+    container_name: wfproxy
+    environment:
+      WAVEFRONT_URL: https://wavefront.surf/api
+      WAVEFRONT_TOKEN: xxxxxxxxxxxxx
+      WAVEFRONT_PROXY_ARGS: "--traceListenerPorts 30001"

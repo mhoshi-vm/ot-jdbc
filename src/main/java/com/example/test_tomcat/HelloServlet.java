@@ -45,15 +45,9 @@ public class HelloServlet extends HttpServlet {
     }
 
 
-    @WithSpan(kind = SpanKind.CLIENT)
+
     public String getAuthors(DBConnection dbConnection) throws SQLException {
         Connection connection = null;
-        Span span = Span.current();
-
-        span.setAttribute("span.kind", "client");
-        span.setAttribute("component", "java-jdbc");
-        span.setAttribute("db.type", "MySQL");
-        span.setAttribute("db.instance", "Authors");
 
         String response = "";
         try {
